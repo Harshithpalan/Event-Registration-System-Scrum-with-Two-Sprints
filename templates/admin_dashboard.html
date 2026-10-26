@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+
+{% block title %}Administrator Dashboard - EventHub{% endblock %}
+
+{% block content %}
+<div class="container admin-section">
+
+  <!-- Header & Actions -->
+  <div class="admin-header">
+    <div class="admin-title-wrap">
+      <h1>Event Management Operations</h1>
+      <p>Oversee events, monitor capacity thresholds, and view registered attendee rosters.</p>
+    </div>
+
+    <div style="display: flex; gap: 0.75rem;">
+      <a href="{{ url_for('admin_create_event') }}" class="btn btn-primary" id="btnCreateNewEvent">
+        + Create New Event
+      </a>
+      <a href="{{ url_for('index') }}" class="btn btn-outline" target="_blank">
+        View Public Site ↗
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Metrics -->
+  <div class="stats-strip" style="margin-top: 1rem; margin-bottom: 2.5rem;">
+    <div class="stat-box">
+      <div class="stat-icon" style="color: #6366f1;">🎪</div>
+      <div>
+        <div class="stat-val">{{ stats.total_events }}</div>
+        <div class="stat-label">Total Events</div>
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <div class="stat-icon" style="color: #10b981;">⚡</div>
+      <div>
+        <div class="stat-val">{{ stats.active_events }}</div>
+        <div class="stat-label">Active Events</div>
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <div class="stat-icon" style="color: #f59e0b;">🎟️</div>
+      <div>
+        <div class="stat-val">{{ stats.total_registrations }}</div>
+        <div class="stat-label">Total Registrations</div>
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <div class="stat-icon" style="color: #ec4899;">👥</div>
+      <div>
+        <div class="stat-val">{{ stats.total_attendees }}</div>
+        <div class="stat-label">Unique Attendees</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table 1: Events Management Table -->
+  <div class="table-card">
+    <div class="table-header">
+      <div>
+        <h3>All Events ({{ events|length }})</h3>
+        <span style="font-size: 0.8rem; color: var(--text-dim);">Manage event schedules, capacities, and attendees</span>
+      </div>
+
+      <div style="width: 280px;">
+        <input 
+          type="text" 
+          id="tableSearchInput" 
+          class="search-input" 
+          placeholder="Filter table rows..." 
+          style="padding: 0.45rem 0.85rem; font-size: 0.85rem;"
+        >
+      </div>
+    </div>
+
+    {% if events %}
+      <div class="table-responsive">
+        <table class="data-table" id="adminEventsTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Event Title</th>
+              <th>Category</th>
+              <th>Date & Time</th>
+              <th>Venue</th>
+              <th>Registrations / Capacity</th>
+              <th>Status</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in events %}
+              <tr id="adminEventRow-{{ event.id }}">
+                <td style="font-weight: 700; color: var(--text-dim);">#{{ event.id }}</td>
+                <td>
+                  <strong>
+                    <a href="{{ url_for('event_detail', event_id=event.id) }}" style="color: #fff;">
+                      {{ event.title }}
+                    </a>
+                  </strong>
+                </td>
+                <td>
+                  <span class="event-category-tag" style="font-size: 0.7rem;">{{ event.category }}</span>
+                </td>
+                <td>
+                  <div>{{ event.date|format_date }}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-dim);">{{ event.time }}</div>
+                </td>
+                <td style="color: var(--text-muted); font-size: 0.85rem;">{{ event.venue }}</td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <strong>{{ event.registered_count }}</strong> / {{ event.capacity }}
+                    {% if event.available_seats <= 0 %}
+                      <span class="status-badge badge-soldout" style="font-size: 0.65rem; padding: 0.1rem 0.4rem;">Full</span>
+                    {% endif %}
+                  </div>
+                  {% set pct = (event.registered_count / event.capacity * 100)|round|int %}
+                  <div class="progress-bar-bg" style="height: 4px; width: 100px; margin-top: 0.25rem;">
+                    <div 
+                      class="progress-bar-fill {% if event.available_seats <= 0 %}full{% elif event.available_seats <= 5 %}warning{% endif %}"
+                      style="width: {{ pct }}%;"
+                    ></div>
+                  </div>
+                </td>
+                <td>
+                  {% if event.status == 'open' %}
+                    <span class="status-badge badge-open">Open</span>
+                  {% elif event.status == 'cancelled' %}
+                    <span class="status-badge badge-cancelled">Cancelled</span>
+                  {% else %}
+                    <span class="status-badge badge-cancelled">Completed</span>
+                  {% endif %}
+                </td>
+                <td style="text-align: right;">
+                  <div class="table-actions" style="justify-content: flex-end;">
+                    <!-- View Attendees -->
+                    <a 
+                      href="{{ url_for('admin_event_registrations', event_id=event.id) }}" 
+                      class="btn btn-outline btn-sm"
+                      title="View Attendees"
+                      id="viewAttendeesBtn-{{ event.id }}"
+                    >
+                      Attendees ({{ event.registered_count }})
+                    </a>
+
+                    <!-- Edit Event -->
+                    <a 
+                      href="{{ url_for('admin_edit_event', event_id=event.id) }}" 
+                      class="btn btn-secondary btn-sm"
+                      title="Edit Event"
+                      id="editEventBtn-{{ event.id }}"
+                    >
+                      Edit
+                    </a>
+
+                    <!-- Cancel Event (if open) -->
+                    {% if event.status == 'open' %}
+                      <form 
+                        action="{{ url_for('admin_cancel_event', event_id=event.id) }}" 
+                        method="POST" 
+                        class="confirm-action" 
+                        data-confirm="Are you sure you want to cancel '{{ event.title }}'? New registrations will be closed."
+                        style="display: inline;"
+                      >
+                        <button type="submit" class="btn btn-warning btn-sm" id="cancelEventBtn-{{ event.id }}">Cancel</button>
+                      </form>
+                    {% endif %}
+
+                    <!-- Delete Event -->
+                    <form 
+                      action="{{ url_for('admin_delete_event', event_id=event.id) }}" 
+                      method="POST" 
+                      class="confirm-action" 
+                      data-confirm="Permanently delete '{{ event.title }}' and all its registration records? This cannot be undone."
+                      style="display: inline;"
+                    >
+                      <button type="submit" class="btn btn-danger btn-sm" id="deleteEventBtn-{{ event.id }}">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p>No events found. Click "+ Create New Event" to get started.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Table 2: Recent Registrations Overview -->
+  <div class="table-card">
+    <div class="table-header">
+      <div>
+        <h3>Recent Confirmed Registrations</h3>
+        <span style="font-size: 0.8rem; color: var(--text-dim);">Live audit trail of attendee bookings across all events</span>
+      </div>
+    </div>
+
+    {% if recent_registrations %}
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Ticket Code</th>
+              <th>Attendee Name</th>
+              <th>Attendee Email</th>
+              <th>Registered Event</th>
+              <th>Event Date</th>
+              <th>Booking Timestamp</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in recent_registrations %}
+              <tr>
+                <td>
+                  <span class="ticket-code-str" style="font-size: 0.85rem;">{{ r.ticket_code }}</span>
+                </td>
+                <td style="font-weight: 600; color: #fff;">{{ r.attendee_name }}</td>
+                <td style="color: var(--text-muted);">{{ r.attendee_email }}</td>
+                <td>
+                  <a href="{{ url_for('event_detail', event_id=r.event_id) }}" style="color: #a5b4fc;">
+                    {{ r.event_title }}
+                  </a>
+                </td>
+                <td>{{ r.event_date|format_date }}</td>
+                <td style="font-size: 0.8rem; color: var(--text-dim);">{{ r.registered_at }}</td>
+                <td>
+                  <span class="status-badge badge-open" style="font-size: 0.7rem;">Confirmed</span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state" style="padding: 2.5rem 1rem;">
+        <p style="color: var(--text-muted); font-size: 0.9rem;">No registrations recorded yet.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

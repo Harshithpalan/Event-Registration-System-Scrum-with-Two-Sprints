@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Registration Confirmed - {{ registration.event_title }} - EventHub{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="ticket-wrapper">
+
+    <!-- Top success alert -->
+    <div class="alert alert-success" style="margin-bottom: 2rem;">
+      <span>🎉 <strong>Registration Successful!</strong> You are officially registered for this event.</span>
+    </div>
+
+    <!-- Digital Ticket Pass Design -->
+    <div class="ticket-pass" id="digitalTicketPass">
+      <div class="ticket-header">
+        <div class="ticket-brand">EventHub Pass</div>
+        <div class="ticket-pill">✓ Confirmed Attendee</div>
+      </div>
+
+      <div class="ticket-body">
+        <span class="event-category-tag" style="margin-bottom: 0.75rem; display: inline-block;">
+          {{ registration.event_category }}
+        </span>
+        <h2 class="ticket-event-name" id="ticketEventTitle">{{ registration.event_title }}</h2>
+
+        <div class="ticket-grid">
+          <div class="ticket-info-item">
+            <label>Attendee Name</label>
+            <p id="ticketAttendeeName">{{ registration.attendee_name }}</p>
+          </div>
+
+          <div class="ticket-info-item">
+            <label>Registered Email</label>
+            <p id="ticketAttendeeEmail">{{ registration.attendee_email }}</p>
+          </div>
+
+          <div class="ticket-info-item">
+            <label>Date & Time</label>
+            <p>{{ registration.event_date|format_date }} &bull; {{ registration.event_time }}</p>
+          </div>
+
+          <div class="ticket-info-item">
+            <label>Venue Location</label>
+            <p>{{ registration.event_venue }}</p>
+          </div>
+        </div>
+
+        <div class="ticket-divider"></div>
+
+        <div class="ticket-info-item" style="text-align: center; margin-top: 1rem;">
+          <label>Unique Verification Ticket Code</label>
+          <div class="ticket-code-str" id="ticketCodeDisplay">{{ registration.ticket_code }}</div>
+        </div>
+      </div>
+
+      <div class="ticket-footer">
+        <div class="ticket-barcode">
+          <div class="barcode-stripes">
+            <div class="barcode-line wide"></div>
+            <div class="barcode-line thin"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line wide"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line thin"></div>
+            <div class="barcode-line wide"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line thin"></div>
+            <div class="barcode-line wide"></div>
+            <div class="barcode-line"></div>
+            <div class="barcode-line thin"></div>
+            <div class="barcode-line wide"></div>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">ISSUED: {{ registration.registered_at }}</span>
+        </div>
+
+        <span class="status-badge badge-open">Active Pass</span>
+      </div>
+    </div>
+
+    <!-- Ticket Actions -->
+    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
+      <button type="button" class="btn btn-primary" id="printTicketBtn">
+        🖨️ Print / Save Ticket Pass
+      </button>
+      <a href="{{ url_for('index') }}" class="btn btn-outline" id="browseMoreBtn">
+        Explore More Events &rarr;
+      </a>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  {% if is_edit %}Edit Event: {{ event.title }}{% else %}Create New Event{% endif %} - EventHub
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="form-container" style="max-width: 720px;">
+    <div style="margin-bottom: 1.5rem;">
+      <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline btn-sm" id="backToDashBtn">
+        &larr; Back to Admin Dashboard
+      </a>
+    </div>
+
+    <div class="form-header">
+      <h2>{% if is_edit %}Edit Event Details{% else %}Create New Event{% endif %}</h2>
+      <p>
+        {% if is_edit %}
+          Update schedules, venue details, or adjust capacity parameters.
+        {% else %}
+          Publish a new upcoming event for public discovery and attendee registration.
+        {% endif %}
+      </p>
+    </div>
+
+    <form 
+      action="{% if is_edit %}{{ url_for('admin_edit_event', event_id=event.id) }}{% else %}{{ url_for('admin_create_event') }}{% endif %}" 
+      method="POST" 
+      id="adminEventForm"
+    >
+      
+      <!-- Event Title -->
+      <div class="form-group">
+        <label for="eventTitle" class="form-label">
+          Event Title <span class="required">*</span>
+        </label>
+        <input 
+          type="text" 
+          name="title" 
+          id="eventTitle" 
+          class="form-control" 
+          placeholder="e.g. NextGen AI Summit 2026"
+          value="{{ event.title|default('', true) }}"
+          required
+        >
+      </div>
+
+      <!-- Category & Status -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="eventCategory" class="form-label">
+            Category <span class="required">*</span>
+          </label>
+          <select name="category" id="eventCategory" class="form-control" required>
+            {% for cat in ['Technology', 'Workshop', 'Seminar', 'Cultural', 'Conference'] %}
+              <option value="{{ cat }}" {% if event.category == cat %}selected{% endif %}>
+                {{ cat }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        {% if is_edit %}
+          <div class="form-group">
+            <label for="eventStatus" class="form-label">
+              Event Status <span class="required">*</span>
+            </label>
+            <select name="status" id="eventStatus" class="form-control" required>
+              <option value="open" {% if event.status == 'open' %}selected{% endif %}>Open for Registration</option>
+              <option value="cancelled" {% if event.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+              <option value="completed" {% if event.status == 'completed' %}selected{% endif %}>Completed</option>
+            </select>
+          </div>
+        {% else %}
+          <div class="form-group">
+            <label class="form-label">Initial Status</label>
+            <input type="text" class="form-control" value="Open for Registration" disabled style="opacity: 0.7;">
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Date & Time -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="eventDate" class="form-label">
+            Event Date <span class="required">*</span>
+          </label>
+          <input 
+            type="date" 
+            name="date" 
+            id="eventDate" 
+            class="form-control" 
+            value="{{ event.date|default('', true) }}"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="eventTime" class="form-label">
+            Start Time <span class="required">*</span>
+          </label>
+          <input 
+            type="time" 
+            name="time" 
+            id="eventTime" 
+            class="form-control" 
+            value="{{ event.time|default('', true) }}"
+            required
+          >
+        </div>
+      </div>
+
+      <!-- Venue & Capacity -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="eventVenue" class="form-label">
+            Venue Location <span class="required">*</span>
+          </label>
+          <input 
+            type="text" 
+            name="venue" 
+            id="eventVenue" 
+            class="form-control" 
+            placeholder="e.g. Auditorium Hall B, Tech Campus"
+            value="{{ event.venue|default('', true) }}"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="eventCapacity" class="form-label">
+            Attendee Capacity <span class="required">*</span>
+          </label>
+          <input 
+            type="number" 
+            name="capacity" 
+            id="eventCapacity" 
+            class="form-control" 
+            placeholder="e.g. 100"
+            min="1"
+            value="{{ event.capacity|default('', true) }}"
+            required
+          >
+          {% if is_edit and event.registered_count is defined %}
+            <div class="form-helper" style="color: #fbbf24;">
+              ⚠️ Current confirmed registrations: <strong>{{ event.registered_count }}</strong>. Capacity cannot be reduced below this number.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label for="eventDesc" class="form-label">
+          Event Description <span class="required">*</span>
+        </label>
+        <textarea 
+          name="description" 
+          id="eventDesc" 
+          class="form-control" 
+          rows="5" 
+          placeholder="Provide comprehensive details about the agenda, key topics, prerequisites, and what attendees should expect..."
+          required
+        >{{ event.description|default('', true) }}</textarea>
+      </div>
+
+      <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+        <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;" id="saveEventSubmitBtn">
+          {% if is_edit %}Save Changes &rarr;{% else %}Publish Event &rarr;{% endif %}
+        </button>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline btn-lg">
+          Cancel
+        </a>
+      </div>
+
+    </form>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ event.title }} - Event Details - EventHub{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div style="margin-top: 2rem;">
+    <a href="{{ url_for('index') }}" class="btn btn-outline btn-sm" id="backToEventsBtn">&larr; Back to Events</a>
+  </div>
+
+  <div class="detail-layout">
+
+    <!-- Left Main Column -->
+    <div class="detail-main">
+      <div class="detail-tags">
+        <span class="event-category-tag">{{ event.category }}</span>
+
+        {% if event.status == 'cancelled' %}
+          <span class="status-badge badge-cancelled">Event Cancelled</span>
+        {% elif event.status == 'completed' %}
+          <span class="status-badge badge-cancelled">Event Concluded</span>
+        {% elif event.available_seats <= 0 %}
+          <span class="status-badge badge-soldout">Fully Booked</span>
+        {% elif event.available_seats <= 5 %}
+          <span class="status-badge badge-filling">Filling Fast</span>
+        {% else %}
+          <span class="status-badge badge-open">Open for Registration</span>
+        {% endif %}
+      </div>
+
+      <h1 class="detail-title" id="eventDetailTitle">{{ event.title }}</h1>
+
+      <div class="detail-content">
+        <h3 style="margin-bottom: 0.75rem; color: #fff;">About This Event</h3>
+        <p style="white-space: pre-line;">{{ event.description }}</p>
+      </div>
+
+      <!-- Metadata Grid -->
+      <div class="detail-meta-grid">
+        <div class="meta-block">
+          <div class="meta-block-icon">📅</div>
+          <div class="meta-block-text">
+            <h4>Date & Schedule</h4>
+            <p>{{ event.date|format_date }}</p>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Starts at {{ event.time }}</span>
+          </div>
+        </div>
+
+        <div class="meta-block">
+          <div class="meta-block-icon">📍</div>
+          <div class="meta-block-text">
+            <h4>Venue Location</h4>
+            <p>{{ event.venue }}</p>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">In-person Attendance</span>
+          </div>
+        </div>
+
+        <div class="meta-block">
+          <div class="meta-block-icon">👥</div>
+          <div class="meta-block-text">
+            <h4>Total Capacity</h4>
+            <p>{{ event.capacity }} Attendees</p>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Strict Limit</span>
+          </div>
+        </div>
+
+        <div class="meta-block">
+          <div class="meta-block-icon">🎟️</div>
+          <div class="meta-block-text">
+            <h4>Confirmed Seats</h4>
+            <p>{{ event.registered_count }} Registered</p>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Verified Attendees</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar Booking Card -->
+    <div class="detail-sidebar">
+      <div class="booking-card">
+        <h3 style="font-size: 1.35rem; margin-bottom: 0.5rem;">Event Registration</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+          Instant digital ticket confirmation with zero booking fees.
+        </p>
+
+        <!-- Capacity Indicator -->
+        <div class="capacity-progress-wrap" style="margin-bottom: 1.75rem;">
+          <div class="capacity-labels">
+            <span>Availability Status</span>
+            {% if event.status == 'cancelled' %}
+              <strong style="color: var(--text-dim);">Cancelled</strong>
+            {% elif event.available_seats <= 0 %}
+              <strong style="color: var(--danger);">0 Seats Available</strong>
+            {% else %}
+              <strong style="color: var(--success);">{{ event.available_seats }} Seats Left</strong>
+            {% endif %}
+          </div>
+
+          {% set pct = (event.registered_count / event.capacity * 100)|round|int %}
+          <div class="progress-bar-bg" style="height: 8px;">
+            <div 
+              class="progress-bar-fill {% if event.available_seats <= 0 %}full{% elif event.available_seats <= 5 %}warning{% endif %}"
+              style="width: {{ pct }}%;"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Action CTA -->
+        {% if event.status == 'open' and event.available_seats > 0 %}
+          <a href="{{ url_for('register', event_id=event.id) }}" class="btn btn-primary btn-lg" style="width: 100%;" id="ctaRegisterBtn">
+            Claim Your Free Ticket &rarr;
+          </a>
+        {% elif event.status == 'cancelled' %}
+          <div class="alert alert-warning" style="margin: 0; font-size: 0.85rem;">
+            This event has been cancelled by the organizer. Registrations are closed.
+          </div>
+        {% else %}
+          <div class="alert alert-danger" style="margin: 0; font-size: 0.85rem;">
+            Registration is closed. All available seats have been claimed.
+          </div>
+        {% endif %}
+
+        <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); font-size: 0.825rem; color: var(--text-dim); display: flex; flex-direction: column; gap: 0.5rem;">
+          <div>✓ Atomic duplicate registration check</div>
+          <div>✓ Unique digital pass issued instantly</div>
+          <div>✓ No payment required</div>
+        </div>
+
+        {% if is_admin %}
+          <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed rgba(255, 255, 255, 0.1);">
+            <a href="{{ url_for('admin_edit_event', event_id=event.id) }}" class="btn btn-outline btn-sm" style="width: 100%;">
+              🛠️ Edit Event in Admin
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

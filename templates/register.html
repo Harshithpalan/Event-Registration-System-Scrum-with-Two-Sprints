@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Register for {{ event.title }} - EventHub{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="form-container">
+    <div style="margin-bottom: 1.5rem;">
+      <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-outline btn-sm" id="backToDetailBtn">
+        &larr; Back to Event Details
+      </a>
+    </div>
+
+    <div class="form-header">
+      <span class="event-category-tag" style="margin-bottom: 0.75rem; display: inline-block;">{{ event.category }}</span>
+      <h2 id="regFormTitle">Register for Event</h2>
+      <p style="color: #fff; font-weight: 600; font-size: 1.1rem; margin-top: 0.25rem;">{{ event.title }}</p>
+      <p style="color: var(--text-muted); font-size: 0.875rem;">
+        📅 {{ event.date|format_date }} at {{ event.time }} &bull; 📍 {{ event.venue }}
+      </p>
+    </div>
+
+    <!-- Capacity Warning if low -->
+    {% if event.available_seats <= 5 %}
+      <div class="alert alert-warning" style="margin-bottom: 1.5rem;">
+        ⚡ Hurry! Only <strong>{{ event.available_seats }} seat{{ 's' if event.available_seats != 1 else '' }}</strong> remaining for this session.
+      </div>
+    {% endif %}
+
+    <form action="{{ url_for('register', event_id=event.id) }}" method="POST" id="registrationForm" novalidate>
+      
+      <!-- Full Name -->
+      <div class="form-group">
+        <label for="attendeeName" class="form-label">
+          Full Name <span class="required">*</span>
+        </label>
+        <input 
+          type="text" 
+          name="name" 
+          id="attendeeName" 
+          class="form-control" 
+          placeholder="e.g. Jane Doe" 
+          value="{{ name|default('', true) }}"
+          required
+          autofocus
+        >
+        <div class="form-helper">Enter your official name for event badges and attendance records.</div>
+      </div>
+
+      <!-- Email Address -->
+      <div class="form-group">
+        <label for="attendeeEmail" class="form-label">
+          Email Address <span class="required">*</span>
+        </label>
+        <input 
+          type="email" 
+          name="email" 
+          id="attendeeEmail" 
+          class="form-control" 
+          placeholder="e.g. jane.doe@example.com" 
+          value="{{ email|default('', true) }}"
+          required
+        >
+        <div class="form-helper">Your ticket code and confirmation will be tied to this email address.</div>
+      </div>
+
+      <!-- Contact Phone (Optional) -->
+      <div class="form-group">
+        <label for="attendeePhone" class="form-label">
+          Phone Number <span style="color: var(--text-dim); font-size: 0.8rem; font-weight: normal;">(Optional)</span>
+        </label>
+        <input 
+          type="tel" 
+          name="phone" 
+          id="attendeePhone" 
+          class="form-control" 
+          placeholder="e.g. +1 (555) 019-2834"
+          value="{{ phone|default('', true) }}"
+        >
+        <div class="form-helper">Optional contact for important schedule updates.</div>
+      </div>
+
+      <div style="margin-top: 2rem;">
+        <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;" id="submitRegBtn">
+          Complete Registration &rarr;
+        </button>
+      </div>
+
+      <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem; color: var(--text-dim);">
+        By registering, you confirm your attendance at {{ event.title }}. Duplicate registrations with the same email are blocked automatically.
+      </div>
+
+    </form>
+  </div>
+
+</div>
+{% endblock %}

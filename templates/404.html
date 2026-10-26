@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found (404) - EventHub{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="empty-state" style="margin-top: 4rem;">
+    <div class="empty-icon" style="font-size: 4rem;">🔍</div>
+    <h1 style="font-size: 3rem; margin-bottom: 0.5rem;">404</h1>
+    <h2 class="empty-title">Page or Event Not Found</h2>
+    <p class="empty-desc">
+      The page or event you are looking for does not exist, has been removed, or the link is expired.
+    </p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary" id="returnHomeBtn">
+      &larr; Back to Events Catalog
+    </a>
+  </div>
+</div>
+{% endblock %}

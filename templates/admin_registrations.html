@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendees: {{ event.title }} - EventHub Admin{% endblock %}
+
+{% block content %}
+<div class="container admin-section">
+
+  <div style="margin-bottom: 1.5rem;">
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline btn-sm" id="backToDashBtn">
+      &larr; Back to Admin Dashboard
+    </a>
+  </div>
+
+  <div class="admin-header">
+    <div class="admin-title-wrap">
+      <span class="event-category-tag" style="margin-bottom: 0.5rem; display: inline-block;">{{ event.category }}</span>
+      <h1 id="attendeesEventTitle">{{ event.title }}</h1>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">
+        📅 {{ event.date|format_date }} at {{ event.time }} &bull; 📍 {{ event.venue }}
+      </p>
+    </div>
+
+    <div>
+      <a href="{{ url_for('admin_edit_event', event_id=event.id) }}" class="btn btn-outline btn-sm">
+        Edit Event Settings
+      </a>
+    </div>
+  </div>
+
+  <!-- Capacity Summary Bar -->
+  <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem 1.75rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+      <span style="font-weight: 600;">Registration Occupancy</span>
+      <span>
+        <strong>{{ attendees|length }}</strong> / {{ event.capacity }} Seats Confirmed 
+        ({{ event.available_seats }} available)
+      </span>
+    </div>
+
+    {% set pct = (attendees|length / event.capacity * 100)|round|int %}
+    <div class="progress-bar-bg" style="height: 8px;">
+      <div 
+        class="progress-bar-fill {% if event.available_seats <= 0 %}full{% elif event.available_seats <= 5 %}warning{% endif %}"
+        style="width: {{ pct }}%;"
+      ></div>
+    </div>
+  </div>
+
+  <!-- Attendee Roster Table -->
+  <div class="table-card">
+    <div class="table-header">
+      <div>
+        <h3>Registered Attendees ({{ attendees|length }})</h3>
+        <span style="font-size: 0.8rem; color: var(--text-dim);">Official verified attendance list</span>
+      </div>
+
+      <div style="width: 280px;">
+        <input 
+          type="text" 
+          id="tableSearchInput" 
+          class="search-input" 
+          placeholder="Filter attendee name or email..." 
+          style="padding: 0.45rem 0.85rem; font-size: 0.85rem;"
+        >
+      </div>
+    </div>
+
+    {% if attendees %}
+      <div class="table-responsive">
+        <table class="data-table" id="attendeesTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Ticket Code</th>
+              <th>Full Name</th>
+              <th>Email Address</th>
+              <th>Contact Phone</th>
+              <th>Registration Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in attendees %}
+              <tr>
+                <td style="color: var(--text-dim); font-weight: 600;">{{ loop.index }}</td>
+                <td>
+                  <span class="ticket-code-str" style="font-size: 0.85rem;">{{ a.ticket_code }}</span>
+                </td>
+                <td style="font-weight: 600; color: #fff;">{{ a.attendee_name }}</td>
+                <td>
+                  <a href="mailto:{{ a.attendee_email }}" style="color: #a5b4fc;">
+                    {{ a.attendee_email }}
+                  </a>
+                </td>
+                <td style="color: var(--text-muted);">{{ a.attendee_phone or '—' }}</td>
+                <td style="font-size: 0.85rem; color: var(--text-dim);">{{ a.registered_at }}</td>
+                <td>
+                  <span class="status-badge badge-open" style="font-size: 0.7rem;">Confirmed</span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state" style="padding: 3rem 1.5rem;">
+        <div class="empty-icon">🎟️</div>
+        <h4 class="empty-title">No Registrations Yet</h4>
+        <p class="empty-desc">
+          No attendees have registered for this event yet. Once attendees register on the public page, they will appear here.
+        </p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
